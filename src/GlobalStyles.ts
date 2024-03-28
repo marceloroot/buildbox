@@ -10,7 +10,34 @@ export const GlobalStyles = createGlobalStyle`
 
 export const ContainerPage = styled.div`
    display: flex;
-   align-items: center;
-   justify-content: center;
+
+   flex-direction: column;
+
    margin-top: 40px;
 `
+
+export const ContainerText = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex:1;
+
+  background-color: ${(props) => props.theme.colors.grayiscontainer};
+
+
+  
+`;
+
+export const CardFeed = styled.div`
+  display: flex;
+
+`;
+
+export const TextCardFeed = styled.div`
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:590px;
+
+
+`;

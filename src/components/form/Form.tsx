@@ -1,35 +1,75 @@
 import React, { useRef, useState } from 'react';
-import { CardImage, ContaienerTrash, ContainerButton, ContainerCardFile, ContainerForm, ContainerInput, InputFile, StyledButton, StyledInput } from './styled';
+import { CardImage, ContaienerTrash, Container, ContainerButton, ContainerCardFile, ContainerForm, ContainerInput, InputFile, StyledButton, StyledInput } from './styled';
 import imageFile from '../../assets/image.png';
 import trashImage from '../../assets/trash.png';
+import { FormField } from '../../interface/FormFild';
+import { v4 as uuidv4 } from 'uuid';
+import { getMessage } from '../../helper/geminiAi';
+// Interface para representar os diferentes tipos de campos do formulário
+interface ListFeedProps{
+  addToFormField:(formfield:FormField) => void;
+}
 
-function Form() {
-   const [file, setFile] = useState<File | null>(null);
-   const fileInputRef = useRef<HTMLInputElement>(null); // Criando a ref para o input file
- 
+function Form({addToFormField}:ListFeedProps) {
+   const [formFields, setFormFields] = useState<FormField>({
+     text: '',
+     textarea: '',
+     file: null,
+     id:'',
+   });
+
+   const fileInputRef = useRef<HTMLInputElement>(null);
+
    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
      const selectedFile = e.target.files?.[0];
      if (selectedFile) {
-       setFile(selectedFile);
+       setFormFields({ ...formFields, file: selectedFile });
      }
    };
  
    const openFileInput = () => {
      if (fileInputRef.current) {
-       fileInputRef.current.click(); // Acionando o clique no input file usando a ref
+       fileInputRef.current.click();
      }
    };
 
    const clearImage = () => {
-      setFile(null); //Limpa a imagem
+      setFormFields({ ...formFields, file: null });
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // limpa o ref
+        fileInputRef.current.value = '';
       }
     };
- 
+
+   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+     const { name, value } = e.target;
+     setFormFields({ ...formFields, [name]: value });
+   };
+
+   const handlePublish = async () => {
+     // Salvar os dados do formulário ou fazer qualquer outra operação necessária
+     console.log('Dados do formulário salvos:', formFields);
+     const FormFiledsWithId = {
+      ...formFields,
+      textarea:await getMessage('Traduça para o inglês e traga somente o texto',formFields.textarea),
+      id: uuidv4()
+     }
+     addToFormField(FormFiledsWithId)
+     clearImage()
+     setFormFields({
+      text: '',
+      textarea: '',
+      file: null,
+      id:''})
+   };
+
+   const handleDiscard = () => {
+     // Limpar os campos do formulário
+     setFormFields({ text: '', textarea: '', file: null,id:'' });
+   };
 
   return (
-    <ContainerForm>
+   <Container>
+      <ContainerForm>
 
       <InputFile
         type="file"
@@ -39,8 +79,8 @@ function Form() {
         style={{ display: 'none' }}
       />
       <ContainerCardFile>
-         <CardImage className={file ? 'fullImage' : ''} onClick={openFileInput}>
-         <img src={file ? URL.createObjectURL(file) : imageFile} alt="imageFile" />
+         <CardImage className={formFields.file ? 'fullImage' : ''} onClick={openFileInput}>
+         <img src={formFields.file ? URL.createObjectURL(formFields.file) : imageFile} alt="imageFile" />
          </CardImage>
          <ContaienerTrash onClick={clearImage}>
          <img src={trashImage} alt="trash" />
@@ -49,21 +89,22 @@ function Form() {
       
       <ContainerInput>
           <div>
-            <StyledInput type={'input'}  />
+            <StyledInput type={'input'} name="text" value={formFields.text} onChange={handleInputChange} />
           </div>
 
           <div>
-            <StyledInput type={'textarea'} />
+            <StyledInput type={'textarea'} name="textarea" value={formFields.textarea} onChange={handleInputChange} />
           </div>
       </ContainerInput>
 
       <ContainerButton>
-         <StyledButton type="delete">Descartar</StyledButton>
-         <StyledButton type="included">Publicar</StyledButton>
+         <StyledButton type="delete" onClick={handleDiscard}>Descartar</StyledButton>
+         <StyledButton type="included" onClick={handlePublish}>Publicar</StyledButton>
       </ContainerButton>
 
-      
       </ContainerForm>
+    </Container>
+
   );
 }
 
